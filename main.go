@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/gorilla/mux"
@@ -18,8 +19,25 @@ func init() {
 	}
 	Trace = log.New(io.MultiWriter(file, os.Stderr), "Trace: ", log.Ldate|log.Ltime|log.Lshortfile)
 }
+
 func main() {
 	router := mux.NewRouter()
 	InitializeRouters(router)
 	Run(":8000", router)
+}
+
+// Run run
+func Run(address string, router *mux.Router) {
+	server := &http.Server{
+		Addr:    address,
+		Handler: router,
+	}
+	server.ListenAndServe()
+}
+
+// InitializeRouters 初始化路由
+func InitializeRouters(router *mux.Router) {
+	router.HandleFunc("/api/shortURL", CreateShortURL).Methods("POST")
+	router.HandleFunc("/api/shortURLInfo", ShortURLInfo).Methods("GET")
+	router.HandleFunc("/{shortURL:[a-zA-Z0-9]{1,11}}", Redirect).Methods("GET")
 }
